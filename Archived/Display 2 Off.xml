@@ -1,0 +1,4 @@
+import xapi from 'xapi';
+
+// This turns off the screen connected to HDMI Output 2
+xapi.command('Video Output Connector CECPower Off', { ConnectorId: 2 });

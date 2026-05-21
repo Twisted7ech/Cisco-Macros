@@ -1,0 +1,1 @@
+xapi.command('Video Output Connector CECPower On', { ConnectorId: 2 });
