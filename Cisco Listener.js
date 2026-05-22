@@ -8,6 +8,7 @@ const winston = require('winston');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+app.disable('etag');
 app.use(express.json());
 
 // ========================
@@ -65,7 +66,7 @@ let lastRlnkResult = 'Never Attempted';
 
 
 async function sendRequestToRLNK(url, formData) {
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 6; attempt++) {
     try {
       logger.info(`RLNK POST attempt ${attempt} to ${url}`);
       const response = await axios({
@@ -112,11 +113,11 @@ async function sendRequestToRLNK(url, formData) {
     }
     totalRlnkErrors += 1;
     recentRlnkErrors += 1;
-    if (attempt < 3) {
+    if (attempt < 6) {
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
-  logger.error('RLNK command ultimately failed after 3 tries');
+  logger.error('RLNK command ultimately failed after 6 tries');
   lastRlnkResult = `FAIL ${new Date().toISOString()}`;
   return false;
 
@@ -189,29 +190,60 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ========================
+// ======================================================
 // CISCO ENDPOINT
-// ========================
+// ======================================================
 
-app.post('/api/v1/racklink/state', validateRacklinkPayload, (req, res) => {
-  logger.info('Incoming Cisco request: ' + JSON.stringify(req.body));
-  res.status(200).json({ success: true });
+app.post('/api/v1/racklink/state', (req, res) => {
+
+  console.log('Incoming:', req.body);
+
+  // Force immediate response
+  res.setHeader('Connection', 'close');
+
+  res.status(200).json({
+    success: true
+  });
+
+  // Explicitly terminate socket
+  res.end();
+
   try {
+
     const { outlet, action } = req.body;
-    logger.info(`Cisco requested outlet ${outlet} -> ${action}`);
+
+    console.log(`SUCCESS: outlet ${outlet} -> ${action}`);
+
     controlOutlet(outlet, action);
+
   } catch (err) {
-    logger.error(`RLNK ERROR: ${err.message}`);
+
+    console.error('RLNK ERROR');
+    console.error(err.message);
+
   }
+
 });
 
-// ========================
+// ======================================================
 // START SERVER
-// ========================
+// ======================================================
 
-app.listen(SERVER_PORT, '0.0.0.0', () => {
-  logger.info(`RackLink Listener Running on port ${SERVER_PORT}`);
-});
+const server = app.listen(
+  SERVER_PORT,
+  '0.0.0.0',
+  () => {
+
+    logger.info(
+      `RackLink Listener Running on port ${SERVER_PORT}`
+    );
+
+  }
+);
+
+// Disable persistent HTTP sessions
+server.keepAliveTimeout = 0;
+server.headersTimeout = 0;
 
 // GRACEFUL SHUTDOWN
 process.on('SIGINT', () => {

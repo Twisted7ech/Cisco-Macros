@@ -1,6 +1,8 @@
+const SERVER_URL = 'http://10.0.151.30:8080/api/v1/racklink/state'; // <-- Update as needed
+
 async function postDualScreenCommand() {
   try {
-    await xapi.Command.HttpClient.Post({
+    const result = await xapi.Command.HttpClient.Post({
       Url: SERVER_URL,
       Header: [ 'Content-Type: application/json' ],
       ResultBody: 'PlainText',
@@ -11,10 +13,9 @@ async function postDualScreenCommand() {
       outlet: '2',
       action: 'on'
     }));
-    console.log('DualScreen POST: success');
-    return true;
+    return result;
   } catch (err) {
     console.log(`DualScreen POST: error - ${err.message}`);
-    return false;
+    return { Body: JSON.stringify({ success: false, error: err.message }) };
   }
 }

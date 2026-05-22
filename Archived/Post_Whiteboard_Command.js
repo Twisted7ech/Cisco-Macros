@@ -2,7 +2,7 @@ const SERVER_URL = 'http://10.0.151.30:8080/api/v1/racklink/state'; // <-- Updat
 
 async function postWhiteboardCommand() {
   try {
-    await xapi.Command.HttpClient.Post({
+    const result = await xapi.Command.HttpClient.Post({
       Url: SERVER_URL,
       Header: [ 'Content-Type: application/json' ],
       ResultBody: 'PlainText',
@@ -13,10 +13,10 @@ async function postWhiteboardCommand() {
       outlet: '2',
       action: 'off'
     }));
-    console.log('Whiteboard POST: success');
-    return true;
+    return result;  // This is important!
   } catch (err) {
     console.log(`Whiteboard POST: error - ${err.message}`);
-    return false;
+    // Simulate a result with known structure
+    return { Body: JSON.stringify({ success: false, error: err.message }) };
   }
 }
