@@ -11,7 +11,7 @@ const WIDGET_DUALSCREEN = 'btn_dualscreen';
 
 const DEFAULT_MODE = 'dualscreen';
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 2000;
 
 // ======================================================
